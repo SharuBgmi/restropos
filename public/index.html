@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RestroPOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- LOGIN SCREEN: phone number -> WhatsApp OTP -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-mark">R·P</div>
+    <h1>RestroPOS</h1>
+
+    <div id="phone-step">
+      <p class="muted">Enter your WhatsApp number to log in</p>
+      <input id="phone-input" type="tel" placeholder="919999999999" class="login-input" />
+      <button id="send-otp-btn" class="btn primary" style="width:100%; margin-top:14px;">Send OTP</button>
+    </div>
+
+    <div id="otp-step" class="hidden">
+      <p class="muted" id="otp-sub">OTP sent on WhatsApp to <span id="otp-phone-display"></span></p>
+      <input id="otp-code-input" type="text" maxlength="6" placeholder="6-digit code" class="login-input mono" />
+      <input id="name-input" type="text" placeholder="Your name (first time only)" class="login-input" style="margin-top:10px;" />
+      <button id="verify-otp-btn" class="btn primary" style="width:100%; margin-top:14px;">Verify & Log In</button>
+      <button id="change-number-btn" class="ghost small" style="width:100%; margin-top:8px;">Use a different number</button>
+    </div>
+
+    <div id="login-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">R·P<span>RestroPOS</span></div>
+    <nav>
+      <button class="nav-btn active" data-view="billing">Billing</button>
+      <button class="nav-btn" data-view="tables">Tables</button>
+      <button class="nav-btn" data-view="menu">Menu</button>
+      <button class="nav-btn" data-view="inventory">Inventory</button>
+      <button class="nav-btn" data-view="kot">KOT Log</button>
+      <button class="nav-btn" data-view="bills">Bills</button>
+      <button class="nav-btn" data-view="reports">Reports</button>
+      <button class="nav-btn" data-view="settings">Settings</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div id="user-name" class="user-name"></div>
+      <button id="logout-btn" class="ghost small">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- BILLING VIEW -->
+    <section id="view-billing" class="view active">
+      <div class="billing-grid">
+        <div class="menu-pane">
+          <div class="pane-head">
+            <h2>Order</h2>
+            <div id="category-tabs" class="category-tabs"></div>
+          </div>
+          <div id="item-grid" class="item-grid"></div>
+        </div>
+        <div class="cart-pane">
+          <div class="pane-head">
+            <h2 id="cart-title">Select a table</h2>
+          </div>
+          <div id="cart-items" class="cart-items"></div>
+          <div class="price-mode-toggle" id="price-mode-toggle">
+            <button data-mode="old" class="active">Old Price</button>
+            <button data-mode="new">New Price (+10%)</button>
+          </div>
+          <div class="cart-summary">
+            <div class="row"><span>Subtotal</span><span id="cart-subtotal">₹0.00</span></div>
+            <div class="row"><span>Discount</span><input id="discount-input" type="number" value="0" min="0" /></div>
+            <div class="row"><span>GST</span><span id="cart-tax">₹0.00</span></div>
+            <div class="row total"><span>Total</span><span id="cart-total">₹0.00</span></div>
+          </div>
+          <div class="cart-actions">
+            <button id="kot-btn" class="btn secondary">Send KOT</button>
+            <button id="bill-btn" class="btn primary">Generate Bill</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLES VIEW -->
+    <section id="view-tables" class="view">
+      <div class="pane-head"><h2>Tables</h2><button id="add-table-btn" class="btn small">+ Add table</button></div>
+      <div id="tables-grid" class="tables-grid"></div>
+    </section>
+
+    <!-- MENU VIEW -->
+    <section id="view-menu" class="view">
+      <div class="pane-head"><h2>Menu Management</h2><button id="add-item-btn" class="btn small">+ Add item</button></div>
+      <table class="data-table" id="menu-table">
+        <thead><tr><th>Item</th><th>Category</th><th>Price</th><th>GST %</th><th>Station</th><th>Stock tracked</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- INVENTORY VIEW -->
+    <section id="view-inventory" class="view">
+      <div class="pane-head"><h2>Inventory</h2></div>
+      <div class="low-stock-banner" id="low-stock-banner"></div>
+      <table class="data-table" id="inventory-table">
+        <thead><tr><th>Item</th><th>Stock</th><th>Threshold</th><th>Adjust</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- KOT LOG VIEW -->
+    <section id="view-kot" class="view">
+      <div class="pane-head"><h2>Kitchen Order Tickets</h2></div>
+      <div id="kot-log" class="kot-log"></div>
+    </section>
+
+    <!-- BILLS VIEW -->
+    <section id="view-bills" class="view">
+      <div class="pane-head">
+        <h2>Bills</h2>
+        <span class="muted" style="font-size:12px">Every bill is sent to the owner on WhatsApp automatically. Deleting a bill requires an OTP.</span>
+      </div>
+      <table class="data-table" id="bills-table">
+        <thead><tr><th>Bill #</th><th>Date</th><th>Total</th><th>Payment</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- REPORTS VIEW -->
+    <section id="view-reports" class="view">
+      <div class="pane-head">
+        <h2>Reports</h2>
+        <div class="report-filters">
+          <input type="date" id="report-from" />
+          <input type="date" id="report-to" />
+          <button id="run-report-btn" class="btn small">Run</button>
+        </div>
+      </div>
+      <div class="reports-grid">
+        <div class="report-card">
+          <h3>Sales by day</h3>
+          <table class="data-table"><thead><tr><th>Date</th><th>Mode</th><th>Bills</th><th>Revenue</th></tr></thead><tbody id="report-sales-body"></tbody></table>
+        </div>
+        <div class="report-card">
+          <h3>Item-wise sales</h3>
+          <table class="data-table"><thead><tr><th>Item</th><th>Qty sold</th><th>Revenue</th></tr></thead><tbody id="report-items-body"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="view-settings" class="view">
+      <div class="pane-head"><h2>Restaurant Settings</h2></div>
+      <div style="max-width:420px; display:flex; flex-direction:column; gap:12px;">
+        <label class="muted" style="font-size:12px;">Restaurant name
+          <input id="settings-name" type="text" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-top:4px;" />
+        </label>
+        <label class="muted" style="font-size:12px;">Address
+          <input id="settings-address" type="text" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-top:4px;" />
+        </label>
+        <label class="muted" style="font-size:12px;">GSTIN
+          <input id="settings-gstin" type="text" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-top:4px;" />
+        </label>
+        <label class="muted" style="font-size:12px;">Phone
+          <input id="settings-phone" type="text" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); margin-top:4px;" />
+        </label>
+        <button id="settings-save-btn" class="btn primary" style="margin-top:8px; width:fit-content;">Save</button>
+        <div id="settings-saved-msg" class="muted" style="font-size:12px;"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- BILL RECEIPT MODAL -->
+<div id="bill-modal" class="modal hidden">
+  <div class="receipt-card" id="receipt-card"></div>
+  <div class="modal-actions">
+    <button id="print-bill-btn" class="btn secondary">Print</button>
+    <button id="close-bill-btn" class="btn primary">Done</button>
+  </div>
+</div>
+
+<!-- OTP MODAL for bill deletion -->
+<div id="otp-modal" class="modal hidden">
+  <div class="login-card" style="background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px;">
+    <h2 style="margin-bottom:6px;">Enter OTP</h2>
+    <p class="muted" id="otp-modal-sub" style="font-size:13px;">OTP sent to owner's WhatsApp</p>
+    <input id="otp-input" type="text" maxlength="6" placeholder="6-digit code" class="login-input mono" style="text-align:center;" />
+    <div id="otp-error" class="login-error"></div>
+    <div class="modal-actions" style="justify-content:center; margin-top:10px;">
+      <button id="otp-cancel-btn" class="btn secondary">Cancel</button>
+      <button id="otp-confirm-btn" class="btn primary">Confirm delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

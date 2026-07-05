@@ -1,0 +1,16 @@
+{
+  "name": "restropos",
+  "version": "1.0.0",
+  "description": "Full-stack restaurant billing POS - menu, tables, billing, KOT, inventory, reports",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
